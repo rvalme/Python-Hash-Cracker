@@ -1,3 +1,7 @@
+# INSTALL
+Make sure to download real_human password 
+https://crackstation.net/buy-crackstation-wordlist-password-cracking-dictionary.htm
+and the link to the password in the assignment notes.
 # Python-Hash-Cracker
 Extremely Fast Python Hash Cracker! This script can try 600,000 words a second.
 It supportes several hash formats with options like a `numbers bruteforce` and `verbose mode`.

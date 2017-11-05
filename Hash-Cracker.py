@@ -25,7 +25,7 @@ def info():
   print "[*] Supported Hashes:"
   print "[>] md5, sha1, sha224, sha256, sha384, sha512"
   print "[*] Thats all folks!\n"
-  
+
 
 def checkOS():
     if os.name == "nt":
@@ -38,7 +38,10 @@ def checkOS():
 
 
 class hashCracking:
-  
+
+  def __init__(self):
+    self.HashSuccess = 0
+
   def hashCrackWordlist(self, userHash, hashType, wordlist, verbose):
     start = time.time()
     self.lineCount = 0
@@ -64,12 +67,15 @@ class hashCracking:
         if (verbose == True):
             sys.stdout.write('\r' + str(line) + ' ' * 20)
             sys.stdout.flush()
-        if (lineHash == userHash.lower()):
+        if (lineHash.lower() == userHash.lower()):
             end = time.time()
+            self.HashSuccess =  self.HashSuccess + 1
+            with open('out_hashes.txt', "a+") as infile2:
+                infile2.write('Hash' + str(self.HashSuccess) + ':' + str(line) + '\n')
             print "\n[+]Hash is: %s" % line
             print "[*]Words tried: %s" % self.lineCount
             print "[*]Time: %s seconds" % round((end-start), 2)
-            exit()
+            #exit()
         else:
             self.lineCount = self.lineCount + 1
     end = time.time()
@@ -77,7 +83,7 @@ class hashCracking:
     print "[*]Reached end of wordlist"
     print "[*]Words tried: %s" % self.lineCount
     print "[*]Time: %s seconds" % round((end-start), 2)
-    exit()
+    #exit()
 
   def hashCrackNumberBruteforce(self, userHash, hashType, verbose):
     start = time.time()
@@ -113,12 +119,12 @@ class hashCracking:
          self.lineCount = self.lineCount + 1
 
 def main(argv):
-  hashType = userHash = wordlist = verbose = numbersBruteforce = None
+  hashType = userHash = userHashfile = wordlist = verbose = numbersBruteforce = None
   print "[Running on %s]\n" % checkOS()
   try:
       opts, args = getopt.getopt(argv,"ih:t:w:nv",["ifile=","ofile="])
   except getopt.GetoptError:
-      print '[*]./Hash-Cracker.py -t <type> -h <hash> -w <wordlist>'
+      print '[*]./Hash-Cracker.py -t <type> -h <hashfile> -w <wordlist>'
       print '[*]Type ./Hash-Cracker.py -i for information'
       sys.exit(1)
   for opt, arg in opts:
@@ -127,42 +133,51 @@ def main(argv):
           sys.exit()
       elif opt in ("-t", "--type"):
           hashType = arg
-      elif opt in ("-h", "--hash"):
-          userHash = arg
+      elif opt in ("-h", "--hashfile"):
+          userHashfile = arg
       elif opt in ("-w", "--wordlist"):
           wordlist = arg
       elif opt in ("-v", "--verbose"):
           verbose = True
       elif opt in ("-n", "--numbers"):
           numbersBruteforce = True
-  if not (hashType and userHash):
+  if not (hashType and userHashfile):
       print '[*]./Hash-Cracker.py -t <type> -h <hash> -w <wordlist>'
       sys.exit()
-  print "[*]Hash: %s" % userHash
+  print "[*]Hash: %s" % userHashfile
   print "[*]Hash type: %s" % hashType
   print "[*]Wordlist: %s" % wordlist
   print "[+]Cracking..."
   try:
       h = hashCracking()
       if (numbersBruteforce == True):
-         h.hashCrackNumberBruteforce(userHash, hashType, verbose)
+         with open(userHashfile, "rU") as infile:
+           for line in infile:
+             line = line.strip()
+             userHash = line
+             h.hashCrackNumberBruteforce(userHash, hashType, verbose)
       else:
-         h.hashCrackWordlist(userHash, hashType, wordlist, verbose)
+         with open(userHashfile, "rU") as infile:
+           for line in infile:
+             line = line.strip()
+             userHash = line
+             #import pdb;pdb.set_trace()
+             h.hashCrackWordlist(userHash, hashType, wordlist, verbose)
 
   except IndexError:
         print "\n[-]Hash not cracked:"
         print "[*]Reached end of wordlist"
         print "[*]Try another wordlist"
         print "[*]Words tried: %s" % h.lineCount
-        
+
   except KeyboardInterrupt:
         print "\n[Exiting...]"
         print "Words tried: %s" % h.lineCount
-        
+
   except IOError:
         print "\n[-]Couldn't find wordlist"
         print "[*]Is this right?"
         print "[>]%s" % wordlist
-        
+
 if __name__ == "__main__":
     main(sys.argv[1:])
